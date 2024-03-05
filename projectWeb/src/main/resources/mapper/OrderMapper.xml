@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.OrderMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Order">
+            <id property="oid" column="oid" jdbcType="INTEGER"/>
+            <result property="oname" column="oname" jdbcType="VARCHAR"/>
+            <result property="ounit" column="ounit" jdbcType="VARCHAR"/>
+            <result property="ocount" column="ocount" jdbcType="VARCHAR"/>
+            <result property="oprice" column="oprice" jdbcType="DECIMAL"/>
+            <result property="osomeprice" column="osomeprice" jdbcType="DECIMAL"/>
+            <result property="ostatus" column="ostatus" jdbcType="VARCHAR"/>
+    </resultMap>
+<!--    int joinOrder(Menu menu, Integer odcount);-->
+    <insert id="joinOrder">
+        insert into c_order
+        values
+            (null,#{menu.mname},#{menu.mnuit},#{odcount},#{menu.mprice},#{sum},'1')
+    </insert>
+
+<!--    List<Order> getOrderList(OrderQuery orderQuery);-->
+    <select id="getOrderList" parameterType="com.xiaohuang.vo.OrderQuery" resultMap="BaseResultMap">
+        select * from c_order
+        <include refid="getEmpListWhere"></include>
+        order by oid desc
+        limit #{start},#{limit}
+    </select>
+
+<!--    Long getCount(OrderQuery orderQuery);-->
+    <select id="getCount"  parameterType="com.xiaohuang.vo.MenuQurey" resultType="Long">
+        select count(1) from c_order
+        <include refid="getEmpListWhere"></include>
+    </select>
+
+<!--    Order qureyById(String id);-->
+    <select id="queryById" parameterType="string" resultType="order">
+        select * from c_order
+        where oid=#{id}
+    </select>
+<!--    int updateOrderByIds(String id);-->
+    <update id="updateOrderByIds" parameterType="string">
+        update c_order
+            set `ocount`=#{ocount}
+        where `oid`=#{id}
+    </update>
+
+<!--    int updateOrder(Order order);-->
+    <update id="updateOrder" parameterType="order">
+        update c_order
+        set `ocount`=#{ocount},
+            `osomeprice`=#{osomeprice}
+        where `oid`=#{oid}
+    </update>
+
+<!--    int deleteOrderById(String id);-->
+    <delete id="deleteOrderById" parameterType="string">
+        delete from c_order where oid=#{id}
+    </delete>
+
+<!--    Double querySumMoney();-->
+    <select id="querySumMoney" parameterType="string" resultType="double">
+        select SUM(osomeprice) from c_order
+        where ostatus=1 and oid in (${ids})
+    </select>
+
+<!--    int setStatus(String ids);-->
+    <update id="setStatus" parameterType="string">
+        update c_order
+        set ostatus=0
+        where `oid` in (${ids})
+    </update>
+
+<!--    List<Order> getOrderByIds(String ids);-->
+    <select id="getOrderByIds" parameterType="string" resultType="order">
+        select * from c_order
+        where oid in (${ids})
+    </select>
+
+<!--    List<Menu> addorderList(MenuQurey menuQurey);-->
+    <select id="addorderList" parameterType="com.xiaohuang.vo.MenuQurey" resultType="menu">
+        SELECT m.* FROM `c_menu` m
+            where m.mstatus=1
+            and   NOT EXISTS (
+                            SELECT 1
+                            FROM c_order o
+                            WHERE o.ostatus = 1 AND m.mname = o.oname
+                        );
+    </select>
+
+<!--    int deleteOrderByIds(String ids);-->
+    <delete id="deleteOrderByIds" parameterType="string">
+       delete from c_order where oid in (${ids})
+    </delete>
+    <sql id="Base_Column_List">
+        oid,oname,onuit,
+        ocount,oprice,osomeprice
+    </sql>
+    <sql id="getEmpListWhere">
+        <where>
+            <if test="oname != null">
+                c_order.oname  like '%' #{oname} '%'
+            </if>
+            <if test="minPrice != null">
+                <![CDATA[
+                and mprice >= #{minPrice}
+                ]]>
+            </if>
+            <if test="maxPrice != null">
+                <![CDATA[
+                and mprice <= #{maxPrice}
+                ]]>
+            </if>
+            <if test="ostatus == 1">
+                <![CDATA[
+                and ostatus =1
+                ]]>
+            </if>
+        </where>
+    </sql>
+</mapper>

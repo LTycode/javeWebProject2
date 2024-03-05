@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.MenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Menu">
+            <id property="mid" column="mid" jdbcType="INTEGER"/>
+            <result property="mname" column="mname" jdbcType="VARCHAR"/>
+            <result property="mtype" column="mtype" jdbcType="VARCHAR"/>
+            <result property="mphoto" column="mphoto" jdbcType="VARCHAR"/>
+            <result property="mnuit" column="mnuit" jdbcType="VARCHAR"/>
+            <result property="mprice" column="mprice" jdbcType="DECIMAL"/>
+            <result property="mstatus" column="mstatus" jdbcType="VARCHAR"/>
+    </resultMap>
+<!--    int insertMenuForRecipe(Recipe recipes);-->
+    <insert id="insertMenuForRecipe">
+        insert into c_menu values
+        <foreach collection="recipes" item="recipe" separator=",">
+            (null,#{recipe.rename},#{recipe.retype},#{recipe.rephoto},#{recipe.reunit},#{recipe.reprice},'1')
+        </foreach>
+    </insert>
+
+<!--    int setStatus();-->
+<update id="setStatus">
+    update c_menu
+    set mstatus='0'
+</update>
+
+<!--    List<Menu> getMenuList(MenuQurey menuQurey);-->
+    <select id="getMenuList" parameterType="com.xiaohuang.vo.MenuQurey" resultMap="BaseResultMap">
+        select * from c_menu
+        <include refid="getEmpListWhere"></include>
+        order by mid desc
+        limit #{start},#{limit}
+    </select>
+
+
+<!--    Long getCount(MenuQurey menuQurey);-->
+    <select id="getCount" parameterType="com.xiaohuang.vo.MenuQurey" resultType="Long">
+        select count(1) from c_menu
+        <include refid="getEmpListWhere"></include>
+    </select>
+
+<!--    Menu getMenuById(Integer id);-->
+    <select id="getMenuById" parameterType="integer" resultType="menu">
+        select * from c_menu where mid=#{id}
+    </select>
+
+<!--    List<Recipe> getRecipeNotMenu();-->
+    <select id="getRecipeNotMenu" resultType="recipe">
+        SELECT r.*
+        FROM c_recipe r
+        WHERE NOT EXISTS (
+                SELECT 1
+                FROM c_menu m
+                WHERE m.mstatus = 1 AND m.mname = r.rename
+            );
+    </select>
+
+<!--    int getcountByStatus();-->
+    <select id="getcountByStatus" resultType="integer">
+        select count(1) from c_menu
+        where mstatus=1
+    </select>
+<!--    int deletemenuByIds(String ids);-->
+    <delete id="deletemenuByIds" parameterType="string">
+        delete from c_menu where mid in (${ids})
+    </delete>
+    <sql id="Base_Column_List">
+        mid,mname,mtype,
+        mphoto,mnuit,mprice,mstatus
+    </sql>
+
+<!--    List<Integer> getmids();-->
+    <select id="getmids" resultType="integer">
+        SELECT mid FROM `c_menu`
+         where mstatus=1
+    </select>
+    <sql id="getEmpListWhere">
+        <where>
+            <if test="mname != null">
+                c_menu.mname  like '%' #{mname} '%'
+            </if>
+            <if test="minPrice != null">
+                <![CDATA[
+                and mprice >= #{minPrice}
+                ]]>
+            </if>
+            <if test="maxPrice != null">
+                <![CDATA[
+                and mprice <= #{maxPrice}
+                ]]>
+            </if>
+            <if test="mstatus == 1">
+                <![CDATA[
+                and mstatus =1
+                ]]>
+            </if>
+        </where>
+    </sql>
+</mapper>

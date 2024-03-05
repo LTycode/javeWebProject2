@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.BlanketorderMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Blanketorder">
+            <id property="bid" column="bid" jdbcType="INTEGER"/>
+            <result property="bname" column="bname" jdbcType="VARCHAR"/>
+            <result property="bcount" column="bcount" jdbcType="VARCHAR"/>
+            <result property="bcreatime" column="bcreatime" jdbcType="VARCHAR"/>
+    </resultMap>
+<!--    List<Blanketorder> selectBycreatime(String creatime);-->
+    <select id="selectBycreatime" parameterType="string" resultType="blanketorder">
+        SELECT oname as bname,sum(ocount) bcount,creatime as bcreatime
+        FROM `c_order` o,c_orderform f
+        where creatime=#{creatime} and o.oid=f.oid
+        GROUP BY oname
+    </select>
+
+<!--    int getcountBycreatime(String creatime);-->
+    <select id="getcountBycreatime" parameterType="string" resultType="integer">
+        select count(1) from c_blanketorder
+        where bcreatime=#{creatime}
+    </select>
+
+<!--    int insertByList(List<Blanketorder> blanketorderList);-->
+    <insert id="insertByList">
+        insert into c_blanketorder values
+        <foreach collection="blanketorderList" item="blanketorder" separator=",">
+            (null,#{blanketorder.bname},#{blanketorder.bcount},#{blanketorder.bcreatime})
+        </foreach>
+    </insert>
+
+<!--    List<Blanketorder> getblanketorderList(BlanketorderQuery blanketorderQuery);-->
+    <select id="getblanketorderList" parameterType="com.xiaohuang.vo.BlanketorderQuery" resultMap="BaseResultMap">
+        select * from c_blanketorder
+        where bcreatime=#{creatime}
+        order by bid desc
+        limit #{blanketorderQuery.start},#{blanketorderQuery.limit}
+    </select>
+<!--    Long getCount(BlanketorderQuery blanketorderQuery);-->
+    <select id="getCount" parameterType="com.xiaohuang.vo.BlanketorderQuery" resultType="Long">
+        select count(1) from c_blanketorder
+        where bcreatime=#{creatime}
+    </select>
+    <sql id="Base_Column_List">
+        bid,bname,bcount,
+        bcreatime
+    </sql>
+
+</mapper>

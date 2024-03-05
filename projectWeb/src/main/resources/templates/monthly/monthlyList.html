@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" th:href="@{/layui/css/layui.css}" media="all">
+    <link rel="stylesheet" th:href="@{/css/layuimini.css?v=2.0.4.2}" media="all">
+    <link rel="stylesheet" th:href="@{/css/themes/default.css}" media="all">
+    <link rel="stylesheet" th:href="@{/lib/font-awesome-4.7.0/css/font-awesome.min.css}" media="all">
+    <style>
+        .div-content{
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+        }
+        .table-search-fieldset {
+            margin: 0;
+            border: 1px solid #e6e6e6;
+            padding: 10px 20px 5px 20px;
+            color: #6b6b6b;
+        }
+        /* 设置表格行高 */
+        #table-recipe .layui-table-body .layui-table-cell {
+            height: 100px; /* 调整行高的数值 */
+            line-height: 100px; /* 行内元素垂直居中 */
+        }
+    </style>
+</head>
+<body>
+
+<div class="div-content">
+    <form class="layui-form layui-form-pane" id="form-search">
+        <fieldset class="table-search-fieldset">
+            <legend>搜索条件</legend>
+            <div class="layui-form-item">
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">菜名</label>
+                    <div class="layui-input-inline" style="width: 150px;">
+                        <input type="text" name="name" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="layui-form-label">价格范围</label>
+                    <div class="layui-input-inline" style="width: 120px;">
+                        <input type="text" name="price_min" placeholder="最低价格" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid">-</div>
+                    <div class="layui-input-inline" style="width: 120px;">
+                        <input type="text" name="price_max" placeholder="最高价格" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <button id="btn-search" lay-submit lay-filter="btn-search-filter" type="button" class="layui-btn layui-btn-radius layui-btn-normal">
+                        <i class="layui-icon layui-icon-search"></i>
+                        搜索
+                    </button>
+                    <button id="btn-reset"  type="reset" class="layui-btn layui-btn-radius layui-btn-primary">
+                        <i class="layui-icon layui-icon-fonts-clear"></i>
+                        清空条件
+                    </button>
+                </div>
+
+            </div>
+        </fieldset>
+    </form>
+
+    <table id="table-recipe" lay-filter="table-recipe-filter"></table>
+</div>
+
+
+
+</script>
+
+<script type="text/html" id="table-recipe-toolbar">
+
+</script>
+
+
+<script th:src="@{/webjars/jquery/3.5.1/jquery.min.js}" charset="utf-8"></script>
+<script th:src="@{/layui/layui.js}" charset="utf-8"></script>
+<script th:inline="javascript">
+
+    function refreshTable(){
+        $("#btn-reset").click();
+        $("#btn-search").click();
+    }
+
+    var ctxPath = [[@{/}]];
+        layui.use(['laydate','table','form'], function(){
+            var laydate = layui.laydate;
+            var table = layui.table;
+            var form = layui.form;
+
+
+
+            //执行一个laydate实例
+            laydate.render({
+                elem: '.date' //指定元素
+            });
+
+            // 员工列表表格渲染
+            table.render({
+                elem: '#table-recipe'
+                ,url:  ctxPath + 'monthly/getmonthlyList' //数据接口
+                ,page: true //开启分页
+                ,toolbar: "#table-recipe-toolbar"
+                ,limits: [5,10,30,50,100]
+                ,cols: [[ //表头
+                    {field: 'creatime', title: '统计年月', width:140,align: 'center'}
+                    ,{field: 'name', title: '菜名', width:140 ,sort: true,align: 'center'}
+                    ,{field: 'unit', title: '单位', width: 80 ,align: 'right'}
+                    ,{field: 'count', title: '分量', width: 80, align: 'center'}
+                    ,{field: 'price', title: '单价', width: 80, align: 'center'}
+                    ,{field: 'someprice', title: '价格', width: 120, align: 'center'}
+                ]],
+                done: function (res, curr, count) {
+                    var data = res.data; // 获取表格数据
+                    var total = 0; // 初始化总值
+
+                    // 计算合计值
+                    for (var i = 0; i < data.length; i++) {
+                        total += parseFloat(data[i].someprice || 0);
+                    }
+
+                    // 插入额外的行
+                    var tbody = $('#table-recipe').next().find('.layui-table tbody');
+                    var tr = '<tr><td colspan="5" align="center">合计价格：</td><td align="center">' + total + '</td></tr>';
+                    tbody.append(tr);
+                }
+
+
+            });
+
+
+        });
+</script>
+</body>
+</html>

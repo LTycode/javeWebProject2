@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.RecipeMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Recipe">
+            <id property="reid" column="reid" jdbcType="INTEGER"/>
+            <result property="rename" column="rename" jdbcType="VARCHAR"/>
+            <result property="rephoto" column="rephoto" jdbcType="VARCHAR"/>
+            <result property="reprice" column="reprice" jdbcType="DECIMAL"/>
+            <result property="reinstructions" column="reinstructions" jdbcType="VARCHAR"/>
+            <result property="retype" column="retype" jdbcType="VARCHAR"/>
+            <result property="reunit" column="reunit" jdbcType="VARCHAR"/>
+    </resultMap>
+
+<!--    List<Recipe> queryAll();-->
+    <select id="queryAll" resultType="Recipe">
+        select * from c_recipe
+    </select>
+
+<!--    List<Recipe> getRecipeList();-->
+    <!-- 查询员工列表数据 -->
+    <select id="getRecipeList" parameterType="com.xiaohuang.vo.RecipeQuery" resultMap="BaseResultMap">
+        select * from c_recipe
+        <include refid="getEmpListWhere"></include>
+        order by reid desc
+        limit #{start},#{limit}
+    </select>
+
+<!--    Long getCount(RecipeQuery recipeQuery);-->
+    <!-- 统计员工数据量 -->
+    <select id="getCount" parameterType="com.xiaohuang.vo.RecipeQuery" resultType="Long">
+        select count(1) from c_recipe
+        <include refid="getEmpListWhere"></include>
+    </select>
+
+<!--    int addRecipe(Recipe recipe);-->
+    <insert id="addRecipe" parameterType="Recipe">
+        insert into c_recipe
+        values
+            (null,#{rename},#{rephoto},#{reprice},#{reinstructions},#{retype},#{reunit})
+    </insert>
+
+<!--    recipeMapper.deleteRecipeByIds(ids);-->
+    <delete id="deleteRecipeByIds" parameterType="String">
+        delete from c_recipe where reid in (${ids})
+    </delete>
+
+<!--    Recipe getRecipeById(Integer id);-->
+    <select id="getRecipeById" parameterType="integer" resultType="recipe">
+        select * from c_recipe where reid=#{id}
+    </select>
+
+<!--    int updateRecipe(Recipe recipe);-->
+    <update id="updateRecipe" parameterType="recipe">
+        update c_recipe
+        set `rename` = #{rename},
+            `rephoto` = #{rephoto},
+            `reprice` = #{reprice},
+            `reinstructions` = #{reinstructions},
+            `retype` = #{retype},
+            `reunit` = #{reunit}
+        where `reid` = #{reid}
+    </update>
+
+<!--    List<Recipe> getMenuByIds(String ids);-->
+    <select id="getMenuByIds" parameterType="string" resultType="recipe">
+        select * from c_recipe where reid IN (${ids})
+    </select>
+    <sql id="getEmpListWhere">
+        <where>
+            <if test="rename != null">
+                c_recipe.rename  like '%' #{rename} '%'
+            </if>
+            <if test="minPrice != null">
+                <![CDATA[
+                and reprice >= #{minPrice}
+                ]]>
+            </if>
+            <if test="maxPrice != null">
+                <![CDATA[
+                and reprice <= #{maxPrice}
+                ]]>
+            </if>
+        </where>
+    </sql>
+    <sql id="Base_Column_List">
+        reid,rename,rephoto,
+        reprice,reinstructions,retype,
+        reunit
+    </sql>
+</mapper>

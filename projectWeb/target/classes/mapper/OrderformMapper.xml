@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.OrderformMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Orderform">
+            <id property="ofid" column="ofid" jdbcType="INTEGER"/>
+            <result property="oid" column="oid" jdbcType="INTEGER"/>
+            <result property="uid" column="uid" jdbcType="INTEGER"/>
+            <result property="creatime" column="creatime" jdbcType="VARCHAR"/>
+            <result property="odmomey" column="odmomey" jdbcType="DECIMAL"/>
+    </resultMap>
+
+<!--    int addOrderForm(Orderform orderform);-->
+    <insert id="addOrderForm" parameterType="orderform">
+        insert into c_orderform
+        values
+            (null,#{oid},#{uid},#{creatime},#{odmomey})
+    </insert>
+
+<!--    List<Orderform> selectOrderform(Integer uid, String creatime);-->
+    <select id="selectOrderform" resultType="orderform">
+        select * from c_orderform
+        where `uid`=#{uid} and `creatime`=#{creatime}
+    </select>
+
+<!--    List<Monthly> peicanorderlist(String creatime);-->
+    <select id="peicanorderlist" resultType="monthly">
+        select uid,oname,creatime,ounit,ocount,oprice,osomeprice
+        from `c_orderform` f,c_order o
+        where o.ostatus=0
+          and creatime=#{creatime}
+          and f.oid=o.oid
+    </select>
+<!--     List<Integer> getUids(String creatime);-->
+    <select id="getUids" resultType="integer">
+        select uid
+        from `c_orderform` f,c_order o
+        where o.ostatus=0
+          and creatime=#{creatime}
+          and f.oid=o.oid
+        GROUP BY uid
+    </select>
+<!--    List<PeicanPojo> getpeicanorderList(PeicanQuery peicanQuery, String creatime);-->
+    <select id="getpeicanorderList" resultType="com.xiaohuang.vo.PeicanPojo" parameterType="com.xiaohuang.vo.PeicanQuery">
+        SELECT  u.username username,u.phone phone,o.oname oname,o.ounit ounit,o.ocount ocount,f.creatime creatime
+        FROM `c_orderform` f,c_order o,c_user u
+        where o.ostatus=0
+          and o.oid=f.oid
+          and creatime=#{creatime}
+          and u.uid=f.uid
+        <if test="peicanQuery.username != null">
+            and u.username like '%' #{peicanQuery.username} '%'
+        </if>
+        limit #{peicanQuery.start},#{peicanQuery.limit}
+    </select>
+    <sql id="Base_Column_List">
+        ofid,oid,username,
+        phone,creatime,odmomey
+    </sql>
+</mapper>

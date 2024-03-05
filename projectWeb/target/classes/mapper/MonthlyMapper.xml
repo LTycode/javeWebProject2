@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xiaohuang.mapper.MonthlyMapper">
+
+    <resultMap id="BaseResultMap" type="com.xiaohuang.pojo.Monthly">
+            <id property="msid" column="msid" jdbcType="INTEGER"/>
+            <result property="uid" column="uid" jdbcType="INTEGER"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="creatime" column="creatime" jdbcType="VARCHAR"/>
+            <result property="unit" column="unit" jdbcType="VARCHAR"/>
+            <result property="count" column="count" jdbcType="VARCHAR"/>
+            <result property="price" column="price" jdbcType="DECIMAL"/>
+            <result property="someprice" column="someprice" jdbcType="DECIMAL"/>
+            <result property="sumprice" column="sumprice" jdbcType="DECIMAL"/>
+    </resultMap>
+<!--    List<Monthly> getmonthlyList(HistoricalmenuQuery historicalmenuQuery);-->
+    <select id="getmonthlyList" parameterType="com.xiaohuang.vo.HistoricalmenuQuery" resultType="monthly">
+        select `name`,creatime,unit,sum(count) `count`,price,sum(someprice) someprice
+        from c_monthly
+        where  creatime like '%' #{creatime} '%'
+        GROUP BY  `name`
+        limit #{historicalmenuQuery.start},#{historicalmenuQuery.limit}
+    </select>
+
+<!--    List<Monthly> getList();-->
+    <select id="getList" resultType="monthly">
+        SELECT uid,o.oname `name`,o.ounit unit,sum(o.ocount) `count`,o.oprice price,sum(o.osomeprice) someprice,f.creatime creatime
+        FROM `c_orderform` f,c_order o
+        where o.ostatus=1
+          and f.oid=o.oid
+        GROUP BY oname
+    </select>
+
+<!--    int insertMonthly(List<Monthly> monthlies);-->
+    <insert id="insertMonthly">
+        insert into c_monthly values
+        <foreach collection="monthlies" item="monthly" separator=",">
+            (null,#{monthly.uid},#{monthly.name},#{monthly.creatime},#{monthly.unit},#{monthly.count},#{monthly.price},#{monthly.someprice},1)
+        </foreach>
+    </insert>
+
+<!--    double selectSumSomeprice(Integer uid, String creatime1);-->
+    <select id="selectSumSomeprice" resultType="double">
+        select sum(someprice)
+        from c_monthly
+        where uid=#{uid} and creatime like '%' #{creatime1} '%'
+    </select>
+<!--    int setSumprice(Integer uid, String creatime1,double sumprice);-->
+    <update id="setSumprice">
+        update c_monthly
+        set sumprice=#{sumprice}
+        where uid=#{uid} and creatime like '%' #{creatime1} '%'
+    </update>
+
+<!--    List<Monthly> empmonthlist(Integer uid, String creatime);-->
+    <select id="empmonthlist" resultType="monthly">
+        select uid,`name`,creatime,unit,sum(count) count,price,sum(someprice) someprice,sumprice
+        from c_monthly
+        where  uid=#{uid} and creatime like '%' #{creatime} '%'
+        GROUP BY 	`name`
+    </select>
+
+<!--    List<EmpMonthly> getempmonthlyList(PeicanQuery peicanQuery, String creatime);-->
+    <select id="getempmonthlyList" resultType="com.xiaohuang.vo.EmpMonthly">
+        select u.username,u.phone,f.creatime,o.oname,o.ounit,o.ocount,o.oprice,o.osomeprice
+        from c_orderform f LEFT JOIN c_order o
+                                     on  o.oid=f.oid
+                           left join c_user u
+                                     on u.uid=f.uid
+        where f.creatime like '%' #{creatime} '%'
+        <if test="peicanQuery.username != null">
+            and u.username like '%' #{peicanQuery.username} '%'
+        </if>
+    </select>
+    <sql id="Base_Column_List">
+        msid,uid,name,
+        creatime,unit,count,
+        price,someprice,sumprice
+    </sql>
+</mapper>
